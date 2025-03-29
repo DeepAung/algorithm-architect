@@ -25,7 +25,7 @@ export async function GET(
     }
 
     return NextResponse.json(challenge, { status: StatusCodes.OK });
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: StatusCodes.INTERNAL_SERVER_ERROR }

@@ -23,7 +23,7 @@ export async function GET(
       { error: "No challenges found in the database." },
       { status: StatusCodes.NOT_FOUND }
     );
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: StatusCodes.INTERNAL_SERVER_ERROR }
