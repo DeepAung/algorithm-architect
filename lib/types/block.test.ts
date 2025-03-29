@@ -1,14 +1,6 @@
 import { Block, InputBlock, MinBlock, OutputBlock } from "./block";
 
-const node = new OutputBlock(
-  new MinBlock(
-    new InputBlock([
-      { type: "number", value: 1 },
-      { type: "number", value: 2 },
-      { type: "number", value: 3 },
-    ]),
-  ),
-);
+const node = new OutputBlock(new MinBlock(new InputBlock()));
 
 console.log("node: ", node);
 
