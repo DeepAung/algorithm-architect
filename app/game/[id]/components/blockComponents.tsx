@@ -30,7 +30,9 @@ export function BlockComponent({
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        setContextMenu({ x: e.clientX, y: e.clientY, blockId: id });
+        if (!fromLibrary) {
+          setContextMenu({ x: e.clientX, y: e.clientY, blockId: id });
+        }
       }}
       className="min-h-[100px] min-w-[100px] cursor-pointer rounded bg-gray-300 p-4 shadow-md"
       style={{

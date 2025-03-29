@@ -37,12 +37,13 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
 
     const blockInfo = active.data.current?.blockInfo as BlockInfo;
     const fromLibrary = active.data.current?.fromLibrary as boolean;
-
-    const newBlock: BlockInfo = {
-      id: crypto.randomUUID(),
-      blockType: blockInfo.blockType,
-      nestedBlocks: [],
-    };
+    const newBlock: BlockInfo = fromLibrary
+      ? {
+          id: crypto.randomUUID(),
+          blockType: blockInfo.blockType,
+          nestedBlocks: [],
+        }
+      : cloneBlock(blockInfo);
 
     setBlocks((draft) => {
       if (over.id === "workspace") {
@@ -131,6 +132,19 @@ export function removeBlock(
       ...block,
       nestedBlocks: removeBlock(block.nestedBlocks, targetId),
     }));
+}
+
+export function cloneBlock(originalBlock: BlockInfo): BlockInfo {
+  let clonedBlock = structuredClone(originalBlock);
+  const recur = (block: BlockInfo) => {
+    block.id = crypto.randomUUID();
+    for (const subBlock of block.nestedBlocks) {
+      recur(subBlock);
+    }
+
+    return block;
+  };
+  return recur(clonedBlock);
 }
 
 // 🔹 Render Blocks
