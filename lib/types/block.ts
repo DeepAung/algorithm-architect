@@ -20,10 +20,15 @@ export const UnknownBlockError = new Error("Unknown block type");
 export const InvalidBlockError = new Error("Invalid block object");
 
 export abstract class Block {
+  id: string;
   name: BlockType;
+
   constructor(name: BlockType) {
+    this.id = crypto.randomUUID();
     this.name = name;
   }
+
+  public abstract clone(): Block;
 
   public static stringify(block: Block): string {
     return JSON.stringify(block);
@@ -117,6 +122,10 @@ export class InputBlock extends ListBlock {
   constructor() {
     super(BlockType.Input);
   }
+
+  public clone(): Block {
+    return new InputBlock();
+  }
 }
 
 export class OutputBlock extends Block {
@@ -125,6 +134,10 @@ export class OutputBlock extends Block {
   constructor(block: Block | null) {
     super(BlockType.Output);
     this.block = block;
+  }
+
+  public clone(): Block {
+    return new OutputBlock(this.block ? this.block.clone() : null);
   }
 }
 
@@ -135,6 +148,10 @@ export class ReturnLiteralBlock extends LiteralBlock {
     super(BlockType.ReturnLiteral);
     this.literal = literal;
   }
+
+  public clone(): Block {
+    return new ReturnLiteralBlock(this.literal);
+  }
 }
 
 export class MinBlock extends LiteralBlock {
@@ -143,6 +160,10 @@ export class MinBlock extends LiteralBlock {
   constructor(listBlock: ListBlock | null) {
     super(BlockType.Min);
     this.listBlock = listBlock;
+  }
+
+  public clone(): Block {
+    return new MinBlock(this.listBlock ? this.listBlock.clone() : null);
   }
 }
 
@@ -153,6 +174,10 @@ export class MaxBlock extends LiteralBlock {
     super(BlockType.Max);
     this.listBlock = listBlock;
   }
+
+  public clone(): Block {
+    return new MaxBlock(this.listBlock ? this.listBlock.clone() : null);
+  }
 }
 
 export class SumBlock extends LiteralBlock {
@@ -162,6 +187,10 @@ export class SumBlock extends LiteralBlock {
     super(BlockType.Sum);
     this.listBlock = listBlock;
   }
+
+  public clone(): Block {
+    return new SumBlock(this.listBlock ? this.listBlock.clone() : null);
+  }
 }
 
 export class CountBlock extends LiteralBlock {
@@ -170,6 +199,10 @@ export class CountBlock extends LiteralBlock {
   constructor(listBlock: ListBlock | null) {
     super(BlockType.Count);
     this.listBlock = listBlock;
+  }
+
+  public clone(): Block {
+    return new CountBlock(this.listBlock ? this.listBlock.clone() : null);
   }
 }
 
@@ -206,6 +239,12 @@ export class InfixOperatorBlock extends LiteralBlock {
     this.right = right;
     this.operator = operator;
   }
+
+  public clone(): Block {
+    const newLeft = this.left ? this.left.clone() : null;
+    const newRight = this.right ? this.right.clone() : null;
+    return new InfixOperatorBlock(newLeft, this.operator, newRight);
+  }
 }
 
 export class PrefixOperatorBlock extends LiteralBlock {
@@ -216,6 +255,11 @@ export class PrefixOperatorBlock extends LiteralBlock {
     super(BlockType.PrefixOperator);
     this.right = right;
     this.operator = operator;
+  }
+
+  public clone(): Block {
+    const newRight = this.right ? this.right.clone() : null;
+    return new PrefixOperatorBlock(this.operator, newRight);
   }
 }
 
