@@ -1,10 +1,8 @@
 import { Block, InputBlock, MinBlock, OutputBlock } from "./block";
 
 const node = new OutputBlock(
-  "outputBlock",
   new MinBlock(
-    "minBlock",
-    new InputBlock("inputBlock", [
+    new InputBlock([
       { type: "number", value: 1 },
       { type: "number", value: 2 },
       { type: "number", value: 3 },
