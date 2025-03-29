@@ -3,25 +3,32 @@
 import {
   Block,
   BlockType,
+  CountBlock,
   InputBlock,
   MaxBlock,
   MinBlock,
   OutputBlock,
+  SumBlock,
 } from "@/lib/types/block";
 import { Challenge } from "@/lib/types/challenge";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { ReactElement, useState } from "react";
 import {
   BlockComponent,
+  CountBlockComponent,
   DroppableZone,
   InputBlockComponent,
   MaxBlockComponent,
   MinBlockComponent,
   OutputBlockComponent,
+  SumBlockComponent,
 } from "./blockComponents";
+
+const APP_URL = process.env.APP_URL;
 
 export default function GameComponent({ challenge }: { challenge: Challenge }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [result, setResult] = useState<number>(0); // float up to 100
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -31,9 +38,45 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
 
   const libraryBlocks: Block[] = [
     new InputBlock(),
+    new OutputBlock(null),
     new MinBlock(null),
     new MaxBlock(null),
+    new SumBlock(null),
+    new CountBlock(null),
   ];
+
+  const handleSubmit = async () => {
+    let body = "";
+    for (const block of blocks) {
+      if (block instanceof OutputBlock) {
+        body = Block.stringify(block);
+        // console.log(body);
+        break;
+      }
+    }
+    if (body == "") {
+      alert("Output Block Not Found");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${APP_URL}/api/grade`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      });
+      if (!response.ok) {
+        alert("Error: not ok");
+        return;
+      }
+      const data = await response.json();
+      setResult(data.result || 0);
+    } catch (error) {
+      alert("Error2: " + error);
+    }
+  };
 
   const recursiveCreate = (
     block: Block,
@@ -50,7 +93,12 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
         }
         block.block = innerBlock;
         return { block, ok: true };
-      } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+      } else if (
+        block instanceof MinBlock ||
+        block instanceof MaxBlock ||
+        block instanceof SumBlock ||
+        block instanceof CountBlock
+      ) {
         if (block.listBlock) {
           return { block, ok: false };
         }
@@ -75,7 +123,12 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
         return { block, ok };
       }
       return { block, ok: false };
-    } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+    } else if (
+      block instanceof MinBlock ||
+      block instanceof MaxBlock ||
+      block instanceof SumBlock ||
+      block instanceof CountBlock
+    ) {
       if (block.listBlock) {
         const { block: resultBlock, ok } = recursiveCreate(
           block.listBlock,
@@ -104,13 +157,17 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
         block.block = recursiveDelete(block.block, targetId);
       }
       return block;
-    } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+    } else if (
+      block instanceof MinBlock ||
+      block instanceof MaxBlock ||
+      block instanceof SumBlock ||
+      block instanceof CountBlock
+    ) {
       if (block.listBlock) {
         block.listBlock = recursiveDelete(block.listBlock, targetId);
       }
       return block;
     } else {
-      console.log("not implemented yet");
       return null;
     }
   };
@@ -119,8 +176,8 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
     const { active, over } = event;
     if (!over) return; // Ignore if not dropped anywhere
 
-    console.log("active: ", active);
-    console.log("over: ", over);
+    // console.log("active: ", active);
+    // console.log("over: ", over);
 
     const innerBlock = active.data.current?.block as Block;
     const innerFromLibrary = active.data.current?.fromLibrary as boolean;
@@ -145,7 +202,7 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
       return;
     }
 
-    console.log("normal create or move");
+    // console.log("normal create or move");
 
     setBlocks((prev) => {
       const result: Block[] = [];
@@ -222,6 +279,14 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
             </button>
           </div>
         )}
+
+        {/* Submitting Menu */}
+        <div className="w-1/4 bg-gray-100 p-4">
+          <button onClick={() => handleSubmit()} className="btn btn-neutral">
+            Submit Code
+          </button>
+          {result != 0 && <p>Result: {result}%</p>}
+        </div>
       </div>
     </DndContext>
   );
@@ -263,6 +328,24 @@ export function renderBlock(
           setContextMenu={setContextMenu}
           fromLibrary={fromLibrary}
         ></MaxBlockComponent>
+      );
+      break;
+    case BlockType.Sum:
+      child = (
+        <SumBlockComponent
+          block={block as MaxBlock}
+          setContextMenu={setContextMenu}
+          fromLibrary={fromLibrary}
+        ></SumBlockComponent>
+      );
+      break;
+    case BlockType.Count:
+      child = (
+        <CountBlockComponent
+          block={block as MaxBlock}
+          setContextMenu={setContextMenu}
+          fromLibrary={fromLibrary}
+        ></CountBlockComponent>
       );
       break;
     default:

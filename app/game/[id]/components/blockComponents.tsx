@@ -1,4 +1,11 @@
-import { Block, MaxBlock, MinBlock, OutputBlock } from "@/lib/types/block";
+import {
+  Block,
+  CountBlock,
+  MaxBlock,
+  MinBlock,
+  OutputBlock,
+  SumBlock,
+} from "@/lib/types/block";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { renderBlock } from "./game";
 
@@ -65,16 +72,6 @@ export function BlockComponent({
   );
 }
 
-// type InnerWithOneInput = {
-//   name: string;
-//   id: string;
-//   block: Block;
-//   setContextMenu: (
-//     context: { x: number; y: number; blockId: string } | null,
-//   ) => void;
-//   fromLibrary: boolean;
-// };
-
 export function InputBlockComponent() {
   return <p>Input Block</p>;
 }
@@ -136,6 +133,50 @@ export function MaxBlockComponent({
   return (
     <>
       <p>Max Block</p>
+      <DroppableZone id={block.id}>
+        {block.listBlock &&
+          renderBlock(block.listBlock, setContextMenu, fromLibrary)}
+      </DroppableZone>
+    </>
+  );
+}
+
+export function SumBlockComponent({
+  block,
+  setContextMenu,
+  fromLibrary,
+}: {
+  block: SumBlock;
+  setContextMenu: (
+    context: { x: number; y: number; blockId: string } | null,
+  ) => void;
+  fromLibrary: boolean;
+}) {
+  return (
+    <>
+      <p>Sum Block</p>
+      <DroppableZone id={block.id}>
+        {block.listBlock &&
+          renderBlock(block.listBlock, setContextMenu, fromLibrary)}
+      </DroppableZone>
+    </>
+  );
+}
+
+export function CountBlockComponent({
+  block,
+  setContextMenu,
+  fromLibrary,
+}: {
+  block: CountBlock;
+  setContextMenu: (
+    context: { x: number; y: number; blockId: string } | null,
+  ) => void;
+  fromLibrary: boolean;
+}) {
+  return (
+    <>
+      <p>Count Block</p>
       <DroppableZone id={block.id}>
         {block.listBlock &&
           renderBlock(block.listBlock, setContextMenu, fromLibrary)}
