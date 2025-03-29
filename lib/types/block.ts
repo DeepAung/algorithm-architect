@@ -4,36 +4,110 @@ export type Literal =
 
 export type List = Literal[];
 
+export enum BlockType {
+  Input = "inputBlock",
+  Output = "outputBlock",
+  ReturnLiteral = "returnLiteralBlock",
+  Min = "minBlock",
+  Max = "maxBlock",
+  Sum = "sumBlock",
+  Count = "countBlock",
+  InfixOperator = "infixOperatorBlock",
+  PrefixOperator = "prefixOperatorBlock",
+}
+
 export const UnknownBlockError = new Error("Unknown block type");
+export const InvalidBlockError = new Error("Invalid block object");
 
 export abstract class Block {
-  name: string;
-  constructor(name: string) {
+  name: BlockType;
+  constructor(name: BlockType) {
     this.name = name;
   }
 
-  static stringify(block: Block): string {
+  public static stringify(block: Block): string {
     return JSON.stringify(block);
   }
 
-  static parse(input: string): Block {
+  public static parse(input: string): Block {
     const obj = JSON.parse(input);
-    switch (obj.name) {
-      case "inputBlock":
-        return new InputBlock(obj.name, obj.value);
-      case "outputBlock":
-        return new OutputBlock(obj.name, obj.block);
-      case "minBlock":
-        return new MinBlock(obj.name, obj.list);
-      case "maxBlock":
-        return new MaxBlock(obj.name, obj.list);
+    return this.parseObject(obj);
+  }
+
+  private static parseObject(obj: any): any {
+    if (!obj) {
+      throw InvalidBlockError;
+    }
+
+    if (!obj.name || typeof obj.name !== "string") {
+      throw InvalidBlockError;
+    }
+
+    switch (obj.name as BlockType) {
+      case BlockType.Input:
+        if (!obj.value || !Array.isArray(obj.value)) {
+          throw InvalidBlockError;
+        }
+        return new InputBlock(obj.value);
+      case BlockType.Output:
+        const block = this.parseObject(obj.block);
+        if (block instanceof Block) {
+          return new OutputBlock(block);
+        }
+        throw InvalidBlockError;
+      case BlockType.ReturnLiteral:
+        if (!obj.literal) {
+          throw InvalidBlockError;
+        }
+        return new ReturnLiteralBlock(obj.literal);
+      case BlockType.Min:
+        const minList = this.parseObject(obj.listBlock);
+        if (minList instanceof ListBlock) {
+          return new MinBlock(minList);
+        }
+        throw InvalidBlockError;
+      case BlockType.Max:
+        const maxList = this.parseObject(obj.listBlock);
+        if (minList instanceof ListBlock) {
+          return new MaxBlock(minList);
+        }
+        throw InvalidBlockError;
+      case BlockType.Sum:
+        const sumList = this.parseObject(obj.listBlock);
+        if (minList instanceof ListBlock) {
+          return new SumBlock(minList);
+        }
+        throw InvalidBlockError;
+      case BlockType.Count:
+        const countList = this.parseObject(obj.listBlock);
+        if (countList instanceof ListBlock) {
+          return new CountBlock(countList);
+        }
+        throw InvalidBlockError;
+      case BlockType.InfixOperator:
+        const left = this.parseObject(obj.left);
+        const right = this.parseObject(obj.right);
+        if (
+          left instanceof LiteralBlock &&
+          right instanceof LiteralBlock &&
+          obj.operator
+        ) {
+          return new InfixOperatorBlock(left, obj.operator, right);
+        }
+        throw InvalidBlockError;
+      case BlockType.PrefixOperator:
+        const rightPrefix = this.parseObject(obj.right);
+        if (rightPrefix instanceof LiteralBlock && obj.operator) {
+          return new PrefixOperatorBlock(obj.operator, rightPrefix);
+        }
+        throw InvalidBlockError;
       default:
         throw UnknownBlockError;
     }
   }
 
   // TODO: Dec-48 please implement this function
-  static evaluate(block: Block): any {}
+  public static evaluate(block: Block): any {}
 }
 
 export abstract class LiteralBlock extends Block {}
@@ -45,8 +119,8 @@ export abstract class ListBlock extends Block {}
 export class InputBlock extends ListBlock {
   value: List;
 
-  constructor(name: "inputBlock", value: List) {
-    super(name);
+  constructor(value: List) {
+    super(BlockType.Input);
     this.value = value;
   }
 }
@@ -54,8 +128,8 @@ export class InputBlock extends ListBlock {
 export class OutputBlock extends Block {
   block: Block;
 
-  constructor(name: "outputBlock", block: Block) {
-    super(name);
+  constructor(block: Block) {
+    super(BlockType.Output);
     this.block = block;
   }
 }
@@ -63,8 +137,8 @@ export class OutputBlock extends Block {
 export class ReturnLiteralBlock extends LiteralBlock {
   literal: Literal;
 
-  constructor(name: "returnLiteralBlock", literal: Literal) {
-    super(name);
+  constructor(literal: Literal) {
+    super(BlockType.ReturnLiteral);
     this.literal = literal;
   }
 }
@@ -72,8 +146,8 @@ export class ReturnLiteralBlock extends LiteralBlock {
 export class MinBlock extends LiteralBlock {
   listBlock: ListBlock;
 
-  constructor(name: "minBlock", listBlock: ListBlock) {
-    super(name);
+  constructor(listBlock: ListBlock) {
+    super(BlockType.Min);
     this.listBlock = listBlock;
   }
 }
@@ -81,8 +155,8 @@ export class MinBlock extends LiteralBlock {
 export class MaxBlock extends LiteralBlock {
   listBlock: ListBlock;
 
-  constructor(name: "minBlock", listBlock: ListBlock) {
-    super(name);
+  constructor(listBlock: ListBlock) {
+    super(BlockType.Max);
     this.listBlock = listBlock;
   }
 }
@@ -90,8 +164,8 @@ export class MaxBlock extends LiteralBlock {
 export class SumBlock extends LiteralBlock {
   listBlock: ListBlock;
 
-  constructor(name: "sumBlock", listBlock: ListBlock) {
-    super(name);
+  constructor(listBlock: ListBlock) {
+    super(BlockType.Sum);
     this.listBlock = listBlock;
   }
 }
@@ -99,8 +173,8 @@ export class SumBlock extends LiteralBlock {
 export class CountBlock extends LiteralBlock {
   listBlock: ListBlock;
 
-  constructor(name: "countBlock", listBlock: ListBlock) {
-    super(name);
+  constructor(listBlock: ListBlock) {
+    super(BlockType.Count);
     this.listBlock = listBlock;
   }
 }
@@ -129,12 +203,11 @@ export class InfixOperatorBlock extends LiteralBlock {
   right: LiteralBlock;
 
   constructor(
-    name: "infixOperatorBlock",
     left: LiteralBlock,
     operator: InfixOperator,
     right: LiteralBlock,
   ) {
-    super(name);
+    super(BlockType.InfixOperator);
     this.left = left;
     this.right = right;
     this.operator = operator;
@@ -145,12 +218,8 @@ export class PrefixOperatorBlock extends LiteralBlock {
   operator: PrefixOperator;
   right: LiteralBlock;
 
-  constructor(
-    name: "prefixOperatorBlock",
-    operator: PrefixOperator,
-    right: LiteralBlock,
-  ) {
-    super(name);
+  constructor(operator: PrefixOperator, right: LiteralBlock) {
+    super(BlockType.PrefixOperator);
     this.right = right;
     this.operator = operator;
   }
