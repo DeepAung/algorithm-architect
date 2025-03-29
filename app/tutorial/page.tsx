@@ -2,7 +2,7 @@ export default function Tutorial() {
   return (
     <div>
       <header className="flex flex-col items-center justify-center relative">
-        <h1 className="mt-4 text-5xl text-gray-700 drop-shadow-lg bg-black text-white p-4 rounded-lg backdrop-blur-sm">
+        <h1 className="mt-4 text-5xl text-gray-700 drop-shadow-2xl bg-black text-white p-4 rounded-lg backdrop-blur-sm">
           Welcome to Our Game Tutorial!
         </h1>
         <a
@@ -30,19 +30,19 @@ export default function Tutorial() {
       </div>
       <div className="mt-8 px-4 shadow-2xl rounded-md bg-white">
         <section className="p-6">
-          <h2 className="flex items-center text-3xl text-gray-600">
-            <span className="mr-2">🖼️</span> Game Page
-          </h2>
+            <h2 className="flex items-center text-3xl text-gray-600">
+            <span className="mr-2">🧩</span> Game Page
+            </h2>
           <div className="mt-6 flex justify-center">
             <img
-              src="/default-avatar.png" // Change this to game page screenshot
+              src="/GamePage(beta).png" // Change this to game page screenshot
               alt="Game Page"
               className="rounded shadow-lg"
             />
           </div>
           <ul className="mt-4 text-lg text-gray-500 list-disc pl-6">
             <li>
-              The Top panel displays the problem description and requirements
+              The Top Rigt panel, displays the problem description and requirements
               (e.g. find the median of three inputs).
             </li>
             <li>
@@ -54,7 +54,7 @@ export default function Tutorial() {
               drop blocks to create your solution.
             </li>
             <li>
-              The right panel, there is a run button on the top that can be
+              The right panel, there is a run button that can be
               clicked to evaluate the challenge (using testcases) and show
               results..
             </li>
