@@ -6,3 +6,46 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  email      String       @unique
+  Submission Submission[]
+}
+
+// model Token {
+//   id         Int          @id @default(autoincrement())
+//   userId Int
+//   accessToken String
+//   refreshToken String
+//   createdAt DateTime
+//   updatedAt DateTime
+// }
+
+model Challenge {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String
+  difficulty  Int
+  testcases   Testcase[]
+  Submission  Submission[]
+}
+
+model Testcase {
+  id          Int       @id @default(autoincrement())
+  challengeId Int
+  input       String
+  output      String
+  Challenge   Challenge @relation(fields: [challengeId], references: [id])
+}
+
+model Submission {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  challengeId Int
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  score       Float
+  blockNumber Int
+}
