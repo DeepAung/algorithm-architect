@@ -4,7 +4,7 @@ import { Challenge } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { NextResponse } from "next/server";
 
-// Get Challenges By Id
+// Get Challenges By Id (challenge's id)
 export async function GET(
   _: Request,
   { params }: { params: Promise<{ id: string }> }
