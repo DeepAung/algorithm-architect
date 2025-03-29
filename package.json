@@ -18,6 +18,9 @@
     "db.reset": "npx prisma migrate reset"
   },
   "dependencies": {
+    "@dnd-kit/accessibility": "^3.1.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
     "@prisma/client": "^6.5.0",
     "daisyui": "^5.0.9",
     "dotenv": "^16.4.7",
@@ -27,6 +30,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
+    "use-immer": "^0.11.0",
     "validator": "^13.15.0",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
