@@ -60,13 +60,16 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
     }
 
     try {
-      const response = await fetch(`${APP_URL}/api/grade`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${APP_URL}/api/challenges/${challenge.id}/grade`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: body,
         },
-        body: body,
-      });
+      );
       if (!response.ok) {
         alert("Error: not ok");
         return;

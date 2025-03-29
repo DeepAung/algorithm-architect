@@ -1,3 +1,5 @@
+import { Testcase } from "@prisma/client";
+
 export type Literal =
   | { type: "number"; value: number }
   | { type: "boolean"; value: boolean };
@@ -108,8 +110,171 @@ export abstract class Block {
     }
   }
 
-  // TODO: Dec-48 please implement this function
-  public static evaluate(block: Block): any {}
+  public static evaluate(
+    block: Block,
+    testcase: Testcase,
+  ): List | Literal | null {
+    const input: List | Literal = JSON.parse(testcase.input);
+
+    switch (block.name as BlockType) {
+      case BlockType.Input:
+        return input;
+
+      case BlockType.Output:
+        const innerBlock = (block as OutputBlock).block;
+        if (!innerBlock) {
+          return null;
+        }
+        return this.evaluate(innerBlock, testcase);
+
+      case BlockType.ReturnLiteral:
+        return (block as ReturnLiteralBlock).literal;
+
+      case BlockType.Min:
+      case BlockType.Max:
+      case BlockType.Sum:
+      case BlockType.Count:
+        const listBlock = (block as MinBlock).listBlock;
+        if (!listBlock) {
+          return null;
+        }
+        const listResult = this.evaluate(listBlock, testcase);
+        if (!Array.isArray(listResult)) {
+          return null;
+        }
+
+        const values = (listResult as List).map((literal: Literal) =>
+          Number(literal.value),
+        );
+        if (block instanceof MinBlock) {
+          return { type: "number", value: Math.min(...values) };
+        } else if (block instanceof MaxBlock) {
+          return { type: "number", value: Math.max(...values) };
+        } else if (block instanceof SumBlock) {
+          return {
+            type: "number",
+            value: values.reduce((acc, x) => acc + x, 0),
+          };
+        } else if (block instanceof CountBlock) {
+          return { type: "number", value: values.length };
+        } else {
+          return null;
+        }
+      case BlockType.InfixOperator:
+        var left = (block as InfixOperatorBlock).left;
+        var infixOperator = (block as InfixOperatorBlock).operator;
+        var right = (block as InfixOperatorBlock).right;
+        if (!left || !infixOperator || !right) {
+          return null;
+        }
+
+        var leftResult = this.evaluate(left, testcase);
+        if (!leftResult || Array.isArray(leftResult)) {
+          return null;
+        }
+        var rightResult = this.evaluate(right, testcase);
+        if (!rightResult || Array.isArray(rightResult)) {
+          return null;
+        }
+
+        switch (infixOperator) {
+          case "+":
+            return {
+              type: "number",
+              value: Number(leftResult.value) + Number(rightResult.value),
+            };
+          case "-":
+            return {
+              type: "number",
+              value: Number(leftResult.value) - Number(rightResult.value),
+            };
+          case "*":
+            return {
+              type: "number",
+              value: Number(leftResult.value) * Number(rightResult.value),
+            };
+          case "//":
+            return {
+              type: "number",
+              value: Math.floor(
+                Number(leftResult.value) / Number(rightResult.value),
+              ),
+            };
+          case "%":
+            return {
+              type: "number",
+              value: Number(leftResult.value) % Number(rightResult.value),
+            };
+          case "^":
+            return {
+              type: "number",
+              value: Number(leftResult.value) ** Number(rightResult.value),
+            };
+          case "&&":
+            return {
+              type: "boolean",
+              value: Boolean(leftResult.value) && Boolean(rightResult.value),
+            };
+          case "||":
+            return {
+              type: "boolean",
+              value: Boolean(leftResult.value) || Boolean(rightResult.value),
+            };
+          case "==":
+            return {
+              type: "boolean",
+              value: leftResult.value == rightResult.value,
+            };
+          case "!=":
+            return {
+              type: "boolean",
+              value: leftResult.value != rightResult.value,
+            };
+          case "<":
+            return {
+              type: "boolean",
+              value: leftResult.value < rightResult.value,
+            };
+          case "<=":
+            return {
+              type: "boolean",
+              value: leftResult.value <= rightResult.value,
+            };
+          case ">":
+            return {
+              type: "boolean",
+              value: leftResult.value > rightResult.value,
+            };
+          case ">=":
+            return {
+              type: "boolean",
+              value: leftResult.value >= rightResult.value,
+            };
+        }
+
+      case BlockType.PrefixOperator:
+        var prefixOperator = (block as PrefixOperatorBlock).operator;
+        var right = (block as PrefixOperatorBlock).right;
+        if (!prefixOperator || !right) {
+          return null;
+        }
+
+        var rightResult = this.evaluate(right, testcase);
+        if (!rightResult || Array.isArray(rightResult)) {
+          return null;
+        }
+
+        switch (prefixOperator) {
+          case "!":
+            return { type: "boolean", value: !rightResult.value };
+          case "-":
+            return { type: "number", value: -rightResult.value };
+        }
+
+      default:
+        throw UnknownBlockError;
+    }
+  }
 }
 
 export abstract class LiteralBlock extends Block {}
