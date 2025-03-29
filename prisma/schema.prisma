@@ -9,9 +9,10 @@ datasource db {
 
 model User {
   id         Int          @id @default(autoincrement())
-  name       String       @unique
+  name       String?      @unique
   email      String       @unique
   Submission Submission[]
+  Token      Token[]
 }
 
 // model Token {
@@ -19,9 +20,19 @@ model User {
 //   userId Int
 //   accessToken String
 //   refreshToken String
-//   createdAt DateTime
-//   updatedAt DateTime
+// createdAt DateTime
+// updatedAt DateTime
 // }
+model Token {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       Int
+  accessToken  String
+  refreshToken String
+  createdAt    DateTime?
+  updatedAt    DateTime?
+  // not needed
+  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
 
 model Challenge {
   id          Int          @id @default(autoincrement())
