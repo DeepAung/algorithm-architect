@@ -24,14 +24,14 @@ model User {
 // updatedAt DateTime
 // }
 model Token {
-  id           String    @id @default(uuid()) @db.Uuid
+  id           String   @id @default(uuid()) @db.Uuid
   userId       Int
   accessToken  String
   refreshToken String
-  createdAt    DateTime?
-  updatedAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   // not needed
-  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Challenge {
