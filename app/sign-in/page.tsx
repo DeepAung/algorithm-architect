@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 
-export default function SignIn() {
+export default function SignInPage() {
   return (
     <div className="bg-base-200 flex h-screen items-center justify-center">
       <div className="card w-96 bg-white p-6 shadow-xl">
