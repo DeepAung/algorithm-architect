@@ -19,12 +19,12 @@ export default function Home() {
   // }
 
   const challenges = [
-    { id: 1, title: "Find the Median" },
-    { id: 2, title: "Count Even Numbers" },
-    { id: 3, title: "Sort Names" },
-    { id: 4, title: "Find Prime Numbers" },
-    { id: 5, title: "Calculate Factorial" },
-    { id: 6, title: "Reverse a String" },
+    { id: 1, title: "Find the Median", difficulty: "Easy" },
+    { id: 2, title: "Count Even Numbers", difficulty: "Easy" },
+    { id: 3, title: "Sort Names", difficulty: "Medium" },
+    { id: 4, title: "Find Prime Numbers", difficulty: "Medium" },
+    { id: 5, title: "Calculate Factorial", difficulty: "Hard" },
+    { id: 6, title: "Reverse a String", difficulty: "Hard" },
   ];
 
   return (
@@ -67,8 +67,22 @@ export default function Home() {
       <div className="grid w-full max-w-4xl grid-cols-2 gap-6 md:grid-cols-3">
         {challenges.map((challenge) => (
           <Link key={challenge.id} href={`/game/${challenge.id}`}>
-            <div className="card cursor-pointer bg-white p-4 text-center shadow-md hover:shadow-lg">
-              <h2 className="text-xl font-semibold">{challenge.title}</h2>
+            <div className="card flex cursor-pointer flex-col items-center bg-white p-6 text-center shadow-md hover:shadow-lg">
+              <h2 className="mt-2 text-lg font-semibold">{challenge.title}</h2>
+              <p className="text-5xl font-bold text-gray-700">
+                {String(challenge.id).padStart(2, "0")}
+              </p>
+              <span
+                className={`mt-2 rounded-full px-3 py-1 text-sm font-bold ${
+                  challenge.difficulty === "Easy"
+                    ? "bg-green-200 text-green-800"
+                    : challenge.difficulty === "Medium"
+                      ? "bg-yellow-200 text-yellow-800"
+                      : "bg-red-200 text-red-800"
+                }`}
+              >
+                {challenge.difficulty}
+              </span>
             </div>
           </Link>
         ))}
