@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { HTTPError } from "@/lib/types/httpError";
-import { Challenge, Testcase } from "@prisma/client";
+import { Testcase } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { NextResponse } from "next/server";
 
