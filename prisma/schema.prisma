@@ -29,7 +29,7 @@ model Challenge {
   description String
   difficulty  Int
   testcases   Testcase[]
-  Submission  Submission[]
+  cubmission  Submission[]
 }
 
 model Testcase {
@@ -37,15 +37,15 @@ model Testcase {
   challengeId Int
   input       String
   output      String
-  Challenge   Challenge @relation(fields: [challengeId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Submission {
   id          Int       @id @default(autoincrement())
   userId      Int
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   challengeId Int
-  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   score       Float
   blockNumber Int
 }
