@@ -1,16 +1,36 @@
+import { Block, MaxBlock, MinBlock, OutputBlock } from "@/lib/types/block";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { BlockInfo, renderBlock } from "./game";
+import { renderBlock } from "./game";
+
+// 🔹 Droppable Zone
+export function DroppableZone({
+  id,
+  children,
+}: {
+  id: string;
+  children?: React.ReactNode;
+}) {
+  const { setNodeRef } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className="min-h-[50px] border-2 border-dashed bg-white p-2"
+    >
+      {children || <p className="text-gray-400">Drop here</p>}
+    </div>
+  );
+}
 
 // 🔹 Draggable Blocks
 export function BlockComponent({
   id,
-  blockInfo,
+  block,
   setContextMenu,
   fromLibrary,
   children,
 }: {
   id: string;
-  blockInfo: BlockInfo;
+  block: Block;
   setContextMenu: (
     context: { x: number; y: number; blockId: string } | null,
   ) => void;
@@ -19,9 +39,8 @@ export function BlockComponent({
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
-    data: { blockInfo, fromLibrary },
+    data: { block, fromLibrary },
   });
-
   return (
     <div
       ref={setNodeRef}
@@ -46,18 +65,47 @@ export function BlockComponent({
   );
 }
 
+// type InnerWithOneInput = {
+//   name: string;
+//   id: string;
+//   block: Block;
+//   setContextMenu: (
+//     context: { x: number; y: number; blockId: string } | null,
+//   ) => void;
+//   fromLibrary: boolean;
+// };
+
 export function InputBlockComponent() {
-  return <p> Input Block</p>;
+  return <p>Input Block</p>;
 }
 
-export function MinBlockComponent({
-  id,
-  blockInfo,
+export function OutputBlockComponent({
+  block,
   setContextMenu,
   fromLibrary,
 }: {
-  id: string;
-  blockInfo: BlockInfo;
+  block: OutputBlock;
+  setContextMenu: (
+    context: { x: number; y: number; blockId: string } | null,
+  ) => void;
+  fromLibrary: boolean;
+}) {
+  return (
+    <>
+      <p>Output Block</p>
+      <DroppableZone id={block.id}>
+        {block.block && renderBlock(block.block, setContextMenu, fromLibrary)}
+      </DroppableZone>
+    </>
+  );
+}
+
+export function MinBlockComponent({
+  block,
+  setContextMenu,
+  fromLibrary,
+}: {
+  block: MinBlock;
   setContextMenu: (
     context: { x: number; y: number; blockId: string } | null,
   ) => void;
@@ -66,31 +114,32 @@ export function MinBlockComponent({
   return (
     <>
       <p>Min Block</p>
-      <DroppableZone id={id}>
-        {blockInfo.nestedBlocks.map((subBlock) =>
-          renderBlock(subBlock, setContextMenu, fromLibrary),
-        )}
+      <DroppableZone id={block.id}>
+        {block.listBlock &&
+          renderBlock(block.listBlock, setContextMenu, fromLibrary)}
       </DroppableZone>
     </>
   );
 }
 
-// 🔹 Droppable Zone
-export function DroppableZone({
-  id,
-  children,
+export function MaxBlockComponent({
+  block,
+  setContextMenu,
+  fromLibrary,
 }: {
-  id: string;
-  children?: React.ReactNode;
+  block: MaxBlock;
+  setContextMenu: (
+    context: { x: number; y: number; blockId: string } | null,
+  ) => void;
+  fromLibrary: boolean;
 }) {
-  const { setNodeRef } = useDroppable({ id });
-
   return (
-    <div
-      ref={setNodeRef}
-      className="min-h-[50px] border-2 border-dashed bg-white p-2"
-    >
-      {children || <p className="text-gray-400">Drop here</p>}
-    </div>
+    <>
+      <p>Max Block</p>
+      <DroppableZone id={block.id}>
+        {block.listBlock &&
+          renderBlock(block.listBlock, setContextMenu, fromLibrary)}
+      </DroppableZone>
+    </>
   );
 }

@@ -1,66 +1,190 @@
 "use client";
 
-import { BlockType } from "@/lib/types/block";
+import {
+  Block,
+  BlockType,
+  InputBlock,
+  MaxBlock,
+  MinBlock,
+  OutputBlock,
+} from "@/lib/types/block";
 import { Challenge } from "@/lib/types/challenge";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { ReactElement, useState } from "react";
-import { useImmer } from "use-immer";
 import {
   BlockComponent,
   DroppableZone,
   InputBlockComponent,
+  MaxBlockComponent,
   MinBlockComponent,
+  OutputBlockComponent,
 } from "./blockComponents";
 
-export type BlockInfo = {
-  id: string;
-  blockType: BlockType;
-  nestedBlocks: BlockInfo[];
-};
-
 export default function GameComponent({ challenge }: { challenge: Challenge }) {
-  const [blocks, setBlocks] = useImmer<BlockInfo[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
     blockId: string;
   } | null>(null);
 
-  const availableBlocks: BlockInfo[] = [
-    { id: crypto.randomUUID(), blockType: BlockType.Input, nestedBlocks: [] },
-    { id: crypto.randomUUID(), blockType: BlockType.Min, nestedBlocks: [] },
+  const libraryBlocks: Block[] = [
+    new InputBlock(),
+    new MinBlock(null),
+    new MaxBlock(null),
   ];
+
+  const recursiveCreate = (
+    block: Block,
+    innerBlock: Block,
+    innerFromLibrary: boolean,
+    outerId: string,
+  ): { block: Block; ok: boolean } => {
+    if (block.id == outerId) {
+      if (block instanceof InputBlock) {
+        return { block, ok: false };
+      } else if (block instanceof OutputBlock) {
+        if (block.block) {
+          return { block, ok: false };
+        }
+        block.block = innerBlock;
+        return { block, ok: true };
+      } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+        if (block.listBlock) {
+          return { block, ok: false };
+        }
+        block.listBlock = innerBlock;
+        return { block, ok: true };
+      } else {
+        return { block, ok: false };
+      }
+    }
+
+    if (block instanceof InputBlock) {
+      return { block, ok: false };
+    } else if (block instanceof OutputBlock) {
+      if (block.block) {
+        const { block: resultBlock, ok } = recursiveCreate(
+          block.block,
+          innerBlock,
+          innerFromLibrary,
+          outerId,
+        );
+        block.block = resultBlock;
+        return { block, ok };
+      }
+      return { block, ok: false };
+    } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+      if (block.listBlock) {
+        const { block: resultBlock, ok } = recursiveCreate(
+          block.listBlock,
+          innerBlock,
+          innerFromLibrary,
+          outerId,
+        );
+        block.listBlock = resultBlock;
+        return { block, ok };
+      }
+      return { block, ok: false };
+    } else {
+      return { block, ok: false };
+    }
+  };
+
+  const recursiveDelete = (block: Block, targetId: string): Block | null => {
+    if (block.id == targetId) {
+      return null;
+    }
+
+    if (block instanceof InputBlock) {
+      return block;
+    } else if (block instanceof OutputBlock) {
+      if (block.block) {
+        block.block = recursiveDelete(block.block, targetId);
+      }
+      return block;
+    } else if (block instanceof MinBlock || block instanceof MaxBlock) {
+      if (block.listBlock) {
+        block.listBlock = recursiveDelete(block.listBlock, targetId);
+      }
+      return block;
+    } else {
+      console.log("not implemented yet");
+      return null;
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return; // Ignore if not dropped anywhere
 
-    const blockInfo = active.data.current?.blockInfo as BlockInfo;
-    const fromLibrary = active.data.current?.fromLibrary as boolean;
-    const newBlock: BlockInfo = fromLibrary
-      ? {
-          id: crypto.randomUUID(),
-          blockType: blockInfo.blockType,
-          nestedBlocks: [],
+    console.log("active: ", active);
+    console.log("over: ", over);
+
+    const innerBlock = active.data.current?.block as Block;
+    const innerFromLibrary = active.data.current?.fromLibrary as boolean;
+    const outerId = over.id.toString();
+
+    if (outerId === "workspace") {
+      setBlocks((prev) => {
+        let result: Block[] = [];
+        const clonedInnerBlock = innerBlock.clone();
+
+        if (!innerFromLibrary) {
+          for (const block of prev) {
+            const newBlock = recursiveDelete(block, innerBlock.id);
+            if (newBlock) result.push(newBlock);
+          }
+        } else {
+          result = prev;
         }
-      : cloneBlock(blockInfo);
-
-    setBlocks((draft) => {
-      if (over.id === "workspace") {
-        draft.push(newBlock);
-      } else {
-        addBlockToParent(draft, over.id.toString(), newBlock);
-      }
-    });
-
-    if (!fromLibrary) {
-      setBlocks((draft) => removeBlock(draft, blockInfo.id));
+        result = [...result, clonedInnerBlock];
+        return result;
+      });
+      return;
     }
+
+    console.log("normal create or move");
+
+    setBlocks((prev) => {
+      const result: Block[] = [];
+      let ok = false;
+      for (const block of prev) {
+        const createResult = recursiveCreate(
+          block,
+          innerBlock.clone(),
+          innerFromLibrary,
+          outerId,
+        );
+        ok = createResult.ok || ok;
+        result.push(createResult.block);
+      }
+
+      const result2: Block[] = [];
+      if (ok && !innerFromLibrary) {
+        for (const block of result) {
+          const newBlock = recursiveDelete(block, innerBlock.id);
+          if (newBlock) result2.push(newBlock);
+        }
+        return result2;
+      }
+
+      return result;
+    });
   };
 
   const handleDelete = () => {
     if (!contextMenu) return;
-    setBlocks((draft) => removeBlock(draft, contextMenu.blockId));
+
+    setBlocks((prev) => {
+      const result: Block[] = [];
+      for (const block of prev) {
+        const newBlock = recursiveDelete(block, contextMenu.blockId);
+        if (newBlock) result.push(newBlock);
+      }
+      return result;
+    });
     setContextMenu(null);
   };
 
@@ -72,7 +196,7 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
       >
         {/* Available Blocks */}
         <div className="w-1/4 bg-gray-100 p-4">
-          {availableBlocks.map((block) =>
+          {libraryBlocks.map((block) =>
             renderBlock(block, setContextMenu, true),
           )}
         </div>
@@ -103,69 +227,42 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
   );
 }
 
-// 🔥 Mutable Helper to Find & Add Nested Block
-// TODO: optimize this
-export function addBlockToParent(
-  blocks: BlockInfo[],
-  targetId: string,
-  newBlock: BlockInfo,
-) {
-  for (const block of blocks) {
-    if (block.id === targetId) {
-      block.nestedBlocks.push(newBlock);
-      return true; // Stop recursion once inserted
-    }
-    if (addBlockToParent(block.nestedBlocks, targetId, newBlock)) return true;
-  }
-  return false;
-}
-
-// 🔥 Helper: Remove Block by ID (Recursive)
-// TODO: optimize this
-export function removeBlock(
-  blocks: BlockInfo[],
-  targetId: string,
-): BlockInfo[] {
-  return blocks
-    .filter((block) => block.id !== targetId)
-    .map((block) => ({
-      ...block,
-      nestedBlocks: removeBlock(block.nestedBlocks, targetId),
-    }));
-}
-
-export function cloneBlock(originalBlock: BlockInfo): BlockInfo {
-  let clonedBlock = structuredClone(originalBlock);
-  const recur = (block: BlockInfo) => {
-    block.id = crypto.randomUUID();
-    for (const subBlock of block.nestedBlocks) {
-      recur(subBlock);
-    }
-
-    return block;
-  };
-  return recur(clonedBlock);
-}
-
 // 🔹 Render Blocks
 export function renderBlock(
-  block: BlockInfo,
+  block: Block,
   setContextMenu: any,
   fromLibrary: boolean = false,
 ): ReactElement {
   let child;
-  switch (block.blockType) {
+  switch (block.name) {
     case BlockType.Input:
       child = <InputBlockComponent />;
+      break;
+    case BlockType.Output:
+      child = (
+        <OutputBlockComponent
+          block={block as OutputBlock}
+          setContextMenu={setContextMenu}
+          fromLibrary={fromLibrary}
+        ></OutputBlockComponent>
+      );
       break;
     case BlockType.Min:
       child = (
         <MinBlockComponent
-          id={block.id}
-          blockInfo={block}
+          block={block as MinBlock}
           setContextMenu={setContextMenu}
           fromLibrary={fromLibrary}
-        />
+        ></MinBlockComponent>
+      );
+      break;
+    case BlockType.Max:
+      child = (
+        <MaxBlockComponent
+          block={block as MaxBlock}
+          setContextMenu={setContextMenu}
+          fromLibrary={fromLibrary}
+        ></MaxBlockComponent>
       );
       break;
     default:
@@ -175,7 +272,7 @@ export function renderBlock(
     <BlockComponent
       key={block.id}
       id={block.id}
-      blockInfo={block}
+      block={block}
       setContextMenu={setContextMenu}
       fromLibrary={fromLibrary}
     >
