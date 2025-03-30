@@ -92,7 +92,7 @@ export abstract class Block {
         if (!obj.listBlock) {
           return new SumBlock(null);
         }
-        list = this.parseObject(obj.listBlolk);
+        list = this.parseObject(obj.listBlock);
         if (list instanceof ListBlock) {
           return new SumBlock(list);
         }
