@@ -1,31 +1,50 @@
-"use client";
-
+import { APP_URL } from "@/lib/config";
+import { parseToken } from "@/lib/jwt";
+import { Difficulty, difficultyToString } from "@/lib/types/difficulty";
+import { cookies } from "next/headers";
 // import { useSession, signOut } from "next-auth/react";
+import { ChallengeDetail } from "@/lib/types/challenge";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { FaQuestion } from "react-icons/fa";
+import SignOut from "./components/sign-out";
 
-export default function HomePage() {
-  // const { data: session } = useSession();
-  const router = useRouter();
+export default async function HomePage() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken");
+
+  if (!accessToken) {
+    redirect("/sign-in");
+  }
+  const { payload, error } = parseToken(accessToken.value);
+  if (error) {
+    alert("error");
+    redirect("/sign-in");
+  }
+
   const user = {
-    name: "John Doe",
-    image: undefined,
+    name: payload.name,
+    image: payload.email,
   };
 
-  // if (!session) {
-  //   router.push("/signin");
-  //   return null;
-  // }
+  let challenges: ChallengeDetail[] = [];
+  try {
+    const response = await fetch(`${APP_URL}/api/challenges`);
+    if (!response.ok) {
+      alert("error");
+    } else {
+      const data = await response.json();
+      challenges = data;
+    }
+  } catch (_) {
+    alert("error");
+  }
 
-  const challenges = [
-    { id: 1, title: "Find the Median", difficulty: "Easy" },
-    { id: 2, title: "Count Even Numbers", difficulty: "Easy" },
-    { id: 3, title: "Sort Names", difficulty: "Medium" },
-    { id: 4, title: "Find Prime Numbers", difficulty: "Medium" },
-    { id: 5, title: "Calculate Factorial", difficulty: "Hard" },
-    { id: 6, title: "Reverse a String", difficulty: "Hard" },
-  ];
+  for (let i = 0; i < challenges.length; i++) {
+    challenges[i].difficultyString = difficultyToString(
+      challenges[i].difficulty,
+    );
+  }
 
   return (
     <div className="bg-base-200 flex min-h-screen flex-col items-center p-6">
@@ -46,7 +65,9 @@ export default function HomePage() {
               className="btn flex flex-row items-center justify-center gap-4 border border-gray-300 bg-white p-6 hover:bg-gray-100"
             >
               <img
-                src={user.image || "/default-avatar.png"}
+                width={24}
+                height={24}
+                src="/default-avatar.png"
                 alt="User Avatar"
                 className="h-6 w-6 rounded-full"
               />
@@ -56,9 +77,7 @@ export default function HomePage() {
               tabIndex={0}
               className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 shadow-sm"
             >
-              <Link className="btn btn-ghost" href="/api/auth/signout">
-                Sign Out
-              </Link>
+              <SignOut />
             </div>
           </div>
         </div>
@@ -68,15 +87,16 @@ export default function HomePage() {
         {challenges.map((challenge) => (
           <Link key={challenge.id} href={`/game/${challenge.id}`}>
             <div className="card flex cursor-pointer flex-col items-center bg-white p-6 text-center shadow-md hover:shadow-lg">
-              <h2 className="mt-2 text-lg font-semibold">{challenge.title}</h2>
+              <h2 className="mt-2 text-lg font-semibold">{challenge.name}</h2>
               <p className="text-5xl font-bold text-gray-700">
                 {String(challenge.id).padStart(2, "0")}
               </p>
               <span
                 className={`mt-2 rounded-full px-3 py-1 text-sm font-bold ${
-                  challenge.difficulty === "Easy"
+                  challenge.difficultyString === Difficulty.VERY_EASY ||
+                  challenge.difficultyString === Difficulty.EASY
                     ? "bg-green-200 text-green-800"
-                    : challenge.difficulty === "Medium"
+                    : challenge.difficultyString === Difficulty.MEDIUM
                       ? "bg-yellow-200 text-yellow-800"
                       : "bg-red-200 text-red-800"
                 }`}

@@ -1,8 +1,3 @@
-export type Challenge = {
-  id: number;
-  title: string;
-  difficulty: string;
-  description: string;
-  exampleInput: string;
-  exampleOutput: string;
-};
+import { Challenge } from "@prisma/client";
+
+export type ChallengeDetail = Challenge & { difficultyString: string };

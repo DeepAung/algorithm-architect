@@ -12,7 +12,7 @@ export async function GET(): Promise<NextResponse<Challenge[] | HTTPError>> {
   } else {
     return NextResponse.json(
       { error: "No challenges found in the database." },
-      { status: StatusCodes.NOT_FOUND }
+      { status: StatusCodes.NOT_FOUND },
     );
   }
 }

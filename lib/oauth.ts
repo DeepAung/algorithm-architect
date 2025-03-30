@@ -18,7 +18,7 @@ export function getOAuthSignInUrl(redirectUrl: string): string {
 
 export async function handleCallback(
   callbackUrl: string,
-): Promise<{ email: string; redirectUrl: string }> {
+): Promise<{ email: string; name: string; redirectUrl: string }> {
   const { searchParams } = new URL(callbackUrl);
   const code = searchParams.get("code");
   const redirectUrl = searchParams.get("state") || ""; // get url to redirect after finished OAuth
@@ -27,8 +27,8 @@ export async function handleCallback(
   }
 
   const accessToken = await fetchAccessToken(code);
-  const email = await fetchUserEmail(accessToken);
-  return { email, redirectUrl };
+  const { email, name } = await fetchUserEmail(accessToken);
+  return { email, name, redirectUrl };
 }
 
 async function fetchAccessToken(code: string): Promise<string> {
@@ -54,7 +54,9 @@ async function fetchAccessToken(code: string): Promise<string> {
   return tokenData.access_token;
 }
 
-async function fetchUserEmail(accessToken: string): Promise<string> {
+async function fetchUserEmail(
+  accessToken: string,
+): Promise<{ email: string; name: string }> {
   const response = await fetch(GOOGLE_OAUTH_USER_INFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -64,5 +66,5 @@ async function fetchUserEmail(accessToken: string): Promise<string> {
     throw new Error("Failed to fetch user data");
   }
 
-  return userData.email;
+  return { email: userData.email, name: userData.name };
 }

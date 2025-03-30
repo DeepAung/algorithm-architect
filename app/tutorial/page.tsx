@@ -1,3 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+
 export default function Tutorial() {
   return (
     <div>
@@ -5,12 +8,12 @@ export default function Tutorial() {
         <h1 className="mt-4 rounded-lg bg-black p-4 text-5xl text-white drop-shadow-2xl backdrop-blur-sm">
           Tutorial
         </h1>
-        <a
+        <Link
           href="/"
           className="absolute top-4 right-4 rounded-md bg-black px-6 py-2 text-lg font-medium text-white shadow-lg drop-shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-gray-800"
         >
           Back to Home
-        </a>
+        </Link>
       </header>
       <div className="mt-8 rounded-md bg-white px-4 shadow-2xl">
         <section className="p-6">
@@ -19,11 +22,12 @@ export default function Tutorial() {
           </h2>
           <ul className="mt-4 list-disc pl-6 text-lg text-gray-500">
             <li>
-              You'll be given a programming problem classified by difficulty.
+              You&apos;ll be given a programming problem classified by
+              difficulty.
             </li>
             <li>
-              There's a block consisting of programming commands that can be
-              drag and drop, used to combine and produce the result.
+              There&apos;s a block consisting of programming commands that can
+              be drag and drop, used to combine and produce the result.
             </li>
             <li>Your goal is to solve the problems using these blocks.</li>
             <li>
@@ -38,10 +42,12 @@ export default function Tutorial() {
             <span className="mr-2">🧩</span> Game Page
           </h2>
           <div className="mt-6 flex justify-center">
-            <img
+            <Image
+              width={1920}
+              height={1080}
               src="/GamePage(beta).png" // Change this to game page screenshot
               alt="Game Page"
-              className="rounded shadow-lg"
+              className="h-full w-full rounded shadow-lg"
             />
           </div>
           <ul className="mt-4 list-disc pl-6 text-lg text-gray-500">

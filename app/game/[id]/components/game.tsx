@@ -10,7 +10,7 @@ import {
   OutputBlock,
   SumBlock,
 } from "@/lib/types/block";
-import { Challenge } from "@/lib/types/challenge";
+import { ChallengeDetail } from "@/lib/types/challenge";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { ReactElement, useState } from "react";
 import {
@@ -24,11 +24,13 @@ import {
   SumBlockComponent,
 } from "./blockComponents";
 
-const APP_URL = process.env.APP_URL;
-
-export default function GameComponent({ challenge }: { challenge: Challenge }) {
+export default function GameComponent({
+  challenge,
+}: {
+  challenge: ChallengeDetail;
+}) {
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [result, setResult] = useState<number>(0); // float up to 100
+  const [submissionResult, setSubmissionResult] = useState<number | null>(null); // float up to 100
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -60,22 +62,21 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
     }
 
     try {
-      const response = await fetch(
-        `${APP_URL}/api/challenges/${challenge.id}/grade`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: body,
+      setSubmissionResult(null);
+      const response = await fetch(`/api/challenges/${challenge.id}/grade`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: body,
+      });
       if (!response.ok) {
         alert("Error: not ok");
         return;
       }
       const data = await response.json();
-      setResult(data.result || 0);
+      // console.log("DATA: ", data);
+      setSubmissionResult(data.result || 0);
     } catch (error) {
       alert("Error2: " + error);
     }
@@ -288,7 +289,7 @@ export default function GameComponent({ challenge }: { challenge: Challenge }) {
           <button onClick={() => handleSubmit()} className="btn btn-neutral">
             Submit Code
           </button>
-          {result != 0 && <p>Result: {result}%</p>}
+          {submissionResult != null && <p>Result: {submissionResult}%</p>}
         </div>
       </div>
     </DndContext>

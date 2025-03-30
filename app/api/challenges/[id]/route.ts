@@ -7,20 +7,20 @@ import { NextResponse } from "next/server";
 // Get Challenges By Id (challenge's id)
 export async function GET(
   _: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<Challenge | HTTPError>> {
   const { id } = await params;
   try {
     const challenge = await prisma.challenge.findUnique({
       where: {
-        id: parseInt(id)
+        id: parseInt(id),
       },
     });
 
     if (!challenge) {
       return NextResponse.json(
         { error: "Challenge not found" },
-        { status: StatusCodes.NOT_FOUND }
+        { status: StatusCodes.NOT_FOUND },
       );
     }
 
@@ -28,7 +28,7 @@ export async function GET(
   } catch (_) {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: StatusCodes.INTERNAL_SERVER_ERROR }
+      { status: StatusCodes.INTERNAL_SERVER_ERROR },
     );
   }
 }

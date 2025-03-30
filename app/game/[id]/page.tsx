@@ -1,5 +1,8 @@
 import GameComponent from "@/app/game/[id]/components/game";
-import { Challenge } from "@/lib/types/challenge";
+import { APP_URL } from "@/lib/config";
+import { ChallengeDetail } from "@/lib/types/challenge";
+import { difficultyToString } from "@/lib/types/difficulty";
+import { redirect } from "next/navigation";
 
 export default async function GamePage({
   params,
@@ -7,14 +10,22 @@ export default async function GamePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const challenge: Challenge = {
-    id: 1,
-    title: "Min Number",
-    difficulty: "Easy",
-    description: "Find the minimum number in a list",
-    exampleInput: "[1, 2, 3]",
-    exampleOutput: "1",
-  };
+  let challenge: ChallengeDetail;
+  try {
+    const response = await fetch(`${APP_URL}/api/challenges/${id}`);
+    if (!response.ok) {
+      alert("error");
+      redirect("/");
+    } else {
+      const data = await response.json();
+      challenge = data;
+    }
+  } catch (_) {
+    alert("error");
+    redirect("/");
+  }
+
+  challenge.difficultyString = difficultyToString(challenge.difficulty);
 
   return <GameComponent challenge={challenge} />;
 }

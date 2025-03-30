@@ -95,7 +95,7 @@ async function tryRefreshToken(
     return null;
   }
 
-  const newToken = generateToken({ email: payload.email });
+  const newToken = generateToken(payload);
   try {
     await prisma.token.update({
       where: { id: tokenId },

@@ -43,10 +43,12 @@ export async function POST(
   }
 
   let passCount = 0;
-  let totalCount = testcases.length;
+  const totalCount = testcases.length;
   for (const testcase of testcases) {
     const result = Block.evaluate(block, testcase);
     const output = JSON.parse(testcase.output);
+    // console.log("result: ", result);
+    // console.log("output: ", output);
     if (!result) {
       if (!output) passCount++;
     } else if (Array.isArray(result)) {
@@ -58,7 +60,7 @@ export async function POST(
   }
 
   return NextResponse.json(
-    { result: passCount / totalCount },
+    { result: (passCount / totalCount) * 100 },
     { status: StatusCodes.OK },
   );
 }

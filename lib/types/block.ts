@@ -50,6 +50,7 @@ export abstract class Block {
       throw InvalidBlockError;
     }
 
+    let list;
     switch (obj.name as BlockType) {
       case BlockType.Input:
         return new InputBlock();
@@ -68,15 +69,42 @@ export abstract class Block {
         return new ReturnLiteralBlock(obj.literal || null);
 
       case BlockType.Min:
-      case BlockType.Max:
-      case BlockType.Sum:
-      case BlockType.Count:
         if (!obj.listBlock) {
           return new MinBlock(null);
         }
-        const list = this.parseObject(obj.listBlock);
+        list = this.parseObject(obj.listBlock);
         if (list instanceof ListBlock) {
           return new MinBlock(list);
+        }
+        throw InvalidBlockError;
+
+      case BlockType.Max:
+        if (!obj.listBlock) {
+          return new MaxBlock(null);
+        }
+        list = this.parseObject(obj.listBlock);
+        if (list instanceof ListBlock) {
+          return new MaxBlock(list);
+        }
+        throw InvalidBlockError;
+
+      case BlockType.Sum:
+        if (!obj.listBlock) {
+          return new SumBlock(null);
+        }
+        list = this.parseObject(obj.listBlolk);
+        if (list instanceof ListBlock) {
+          return new SumBlock(list);
+        }
+        throw InvalidBlockError;
+
+      case BlockType.Count:
+        if (!obj.listBlock) {
+          return new CountBlock(null);
+        }
+        list = this.parseObject(obj.listBlock);
+        if (list instanceof ListBlock) {
+          return new CountBlock(list);
         }
         throw InvalidBlockError;
 
@@ -114,8 +142,11 @@ export abstract class Block {
     block: Block,
     testcase: Testcase,
   ): List | Literal | null {
-    const input: List | Literal = JSON.parse(testcase.input);
+    const input: List | Literal | null = convertToListOrLiteral(
+      JSON.parse(testcase.input),
+    );
 
+    let left, right, operator, leftResult, rightResult;
     switch (block.name as BlockType) {
       case BlockType.Input:
         return input;
@@ -140,12 +171,14 @@ export abstract class Block {
         }
         const listResult = this.evaluate(listBlock, testcase);
         if (!Array.isArray(listResult)) {
+          // console.log("list block not arrar");
           return null;
         }
-
+        // console.log("list result: ", listResult);
         const values = (listResult as List).map((literal: Literal) =>
           Number(literal.value),
         );
+        // console.log("values: ", values);
         if (block instanceof MinBlock) {
           return { type: "number", value: Math.min(...values) };
         } else if (block instanceof MaxBlock) {
@@ -161,23 +194,23 @@ export abstract class Block {
           return null;
         }
       case BlockType.InfixOperator:
-        var left = (block as InfixOperatorBlock).left;
-        var infixOperator = (block as InfixOperatorBlock).operator;
-        var right = (block as InfixOperatorBlock).right;
-        if (!left || !infixOperator || !right) {
+        left = (block as InfixOperatorBlock).left;
+        operator = (block as InfixOperatorBlock).operator;
+        right = (block as InfixOperatorBlock).right;
+        if (!left || !operator || !right) {
           return null;
         }
 
-        var leftResult = this.evaluate(left, testcase);
+        leftResult = this.evaluate(left, testcase);
         if (!leftResult || Array.isArray(leftResult)) {
           return null;
         }
-        var rightResult = this.evaluate(right, testcase);
+        rightResult = this.evaluate(right, testcase);
         if (!rightResult || Array.isArray(rightResult)) {
           return null;
         }
 
-        switch (infixOperator) {
+        switch (operator) {
           case "+":
             return {
               type: "number",
@@ -253,18 +286,18 @@ export abstract class Block {
         }
 
       case BlockType.PrefixOperator:
-        var prefixOperator = (block as PrefixOperatorBlock).operator;
-        var right = (block as PrefixOperatorBlock).right;
-        if (!prefixOperator || !right) {
+        operator = (block as PrefixOperatorBlock).operator;
+        right = (block as PrefixOperatorBlock).right;
+        if (!operator || !right) {
           return null;
         }
 
-        var rightResult = this.evaluate(right, testcase);
+        rightResult = this.evaluate(right, testcase);
         if (!rightResult || Array.isArray(rightResult)) {
           return null;
         }
 
-        switch (prefixOperator) {
+        switch (operator) {
           case "!":
             return { type: "boolean", value: !rightResult.value };
           case "-":
@@ -431,6 +464,33 @@ export class PrefixOperatorBlock extends LiteralBlock {
 // will do this later on
 // export class AverageBlock extends LiteralBlock {}
 // export class MedianBlock extends LiteralBlock {}
+// export class MapBlock extends LiteralBlock {}
+// export class FilterBlock extends LiteralBlock {}
+// export class ReduceBlock extends LiteralBlock {}
+
+// TODO: handle error
+function convertToListOrLiteral(input: any): List | Literal | null {
+  if (Array.isArray(input)) {
+    const result = [];
+
+    for (const item of input) {
+      const itemResult = convertToListOrLiteral(item);
+
+      if (itemResult && !Array.isArray(itemResult)) result.push(itemResult);
+    }
+
+    return result;
+  } else {
+    if (typeof input === "number") {
+      return { type: "number", value: input };
+    } else if (typeof input === "boolean") {
+      return { type: "boolean", value: input };
+    }
+
+    return null;
+  }
+}
+
 // export class MapBlock extends LiteralBlock {}
 // export class FilterBlock extends LiteralBlock {}
 // export class ReduceBlock extends LiteralBlock {}

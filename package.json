@@ -25,6 +25,7 @@
     "daisyui": "^5.0.9",
     "dotenv": "^16.4.7",
     "http-status-codes": "^2.3.0",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "next": "15.2.4",
     "react": "^19.0.0",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.0.17",
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
