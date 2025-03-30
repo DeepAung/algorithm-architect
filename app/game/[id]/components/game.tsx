@@ -252,21 +252,27 @@ export default function GameComponent({
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div
-        className="relative flex gap-4 p-4"
+        className="container mx-auto flex gap-6 p-6"
         onClick={() => setContextMenu(null)}
       >
         {/* Available Blocks */}
-        <div className="w-1/4 bg-gray-100 p-4">
-          {libraryBlocks.map((block) =>
-            renderBlock(block, setContextMenu, true),
-          )}
+        <div className="w-1/4 space-y-4">
+          <h2 className="text-lg font-bold">Library</h2>
+          <div className="bg-base-100 rounded-lg p-4 shadow">
+            {libraryBlocks.map((block) =>
+              renderBlock(block, setContextMenu, true),
+            )}
+          </div>
         </div>
 
         {/* Droppable Workspace */}
-        <div className="flex-1 border p-4">
-          <DroppableZone id="workspace">
-            {blocks.map((block) => renderBlock(block, setContextMenu, false))}
-          </DroppableZone>
+        <div className="flex-1">
+          <div className="bg-base-200 rounded-lg border p-6 shadow-lg">
+            <h2 className="mb-4 text-lg font-bold">Workspace</h2>
+            <DroppableZone id="workspace">
+              {blocks.map((block) => renderBlock(block, setContextMenu, false))}
+            </DroppableZone>
+          </div>
         </div>
 
         {/* Context Menu */}
@@ -285,11 +291,31 @@ export default function GameComponent({
         )}
 
         {/* Submitting Menu */}
-        <div className="w-1/4 bg-gray-100 p-4">
-          <button onClick={() => handleSubmit()} className="btn btn-neutral">
+        <div className="w-1/4 space-y-4">
+          <div className="card bg-base-100 p-4 shadow-lg">
+            <h2 className="card-title font-bold">
+              {challenge.id} | {challenge.name}
+            </h2>
+            <p className="text-sm">{challenge.description}</p>
+            <p className="text-sm font-semibold">
+              Difficulty: {challenge.difficultyString}
+            </p>
+          </div>
+          <button
+            onClick={() => handleSubmit()}
+            className="btn btn-primary w-full"
+          >
             Submit Code
           </button>
-          {submissionResult != null && <p>Result: {submissionResult}%</p>}
+          {submissionResult != null && (
+            <div
+              className={`text-center text-lg font-bold ${
+                submissionResult === 100 ? "text-success" : "text-error"
+              }`}
+            >
+              Result: {submissionResult}%
+            </div>
+          )}
         </div>
       </div>
     </DndContext>

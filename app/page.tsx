@@ -101,7 +101,7 @@ export default async function HomePage() {
                       : "bg-red-200 text-red-800"
                 }`}
               >
-                {challenge.difficulty}
+                {challenge.difficultyString}
               </span>
             </div>
           </Link>
