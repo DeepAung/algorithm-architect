@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 
 export type Payload = {
+  name: string;
   email: string;
 };
 

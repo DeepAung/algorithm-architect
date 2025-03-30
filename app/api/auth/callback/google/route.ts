@@ -14,10 +14,12 @@ export async function GET(
   const cookieStore = await cookies();
 
   let email: string;
+  let name: string;
   let redirectUrl: string;
   try {
     const result = await handleCallback(request.url);
     email = result.email;
+    name = result.name;
     redirectUrl = result.redirectUrl;
   } catch (error) {
     if (error instanceof Error) {
@@ -35,7 +37,7 @@ export async function GET(
 
   let result = await prisma.user.findFirst({
     where: { email: email },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!result) {
     // create user. default to visitor
@@ -43,8 +45,9 @@ export async function GET(
       result = await prisma.user.create({
         data: {
           email: email,
+          name: name,
         },
-        select: { id: true },
+        select: { id: true, name: true },
       });
     } catch (_) {
       return NextResponse.json(
@@ -55,7 +58,8 @@ export async function GET(
   }
 
   const { accessToken, refreshToken } = generateToken({
-    email,
+    email: email,
+    name: result.name!,
   });
 
   let tokenId;

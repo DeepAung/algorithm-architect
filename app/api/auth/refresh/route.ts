@@ -42,7 +42,7 @@ export async function POST(): Promise<NextResponse<object | HTTPError>> {
     );
   }
 
-  const newToken = generateToken({ email: payload.email });
+  const newToken = generateToken(payload);
   try {
     await prisma.token.update({
       where: { id: tokenId },

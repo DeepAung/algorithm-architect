@@ -24,6 +24,7 @@ const eslintConfig = [
           varsIgnorePattern: "^_",
         },
       ],
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   }),
 ];
